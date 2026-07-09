@@ -1,33 +1,37 @@
 # QA Engineer Home Assignment — Single Bet Placement
 
-## Contents
+This repository contains a compact automation suite for validating the single-bet placement flow against a live betting app. It combines API-level regression checks with a browser-driven end-to-end journey so the most important business rules can be verified from both layers.
+
+## What is in this project
+
+- API validation tests for stake boundaries, selection handling, authentication, malformed payloads, and balance reset in [tests/test_api_bet_validation.py](tests/test_api_bet_validation.py)
+- A single end-to-end UI test for the critical bet-placement flow in [tests/test_e2e_bet_placement.py](tests/test_e2e_bet_placement.py)
+- Page Object Model classes for the browser flow in [pages/](pages/)
+- A thin HTTP client for the betting API in [api_client/](api_client/)
+- Test planning, execution notes, and defect reporting in [docs/](docs/)
+
+## Current execution status
+
+The suite has already been exercised against the live application at https://qae-assignment-tau.vercel.app/?user-id=candidate-dLlAp5NuMH. The latest run surfaced several real issues, which are documented in [docs/execution_results.md](docs/execution_results.md):
+
+- API run: 4 failed, 14 passed, 1 skipped
+- UI/E2E flow: the browser journey failed during bet placement because the receipt payout and quoted payout were inconsistent
+- Defects include negative stake acceptance, reset-balance behavior, and payout/receipt inconsistency
+
+## Project structure
 
 | Deliverable | Location |
 |---|---|
-| Test plan (6 prioritized scenarios) | [`docs/test_plan.md`](docs/test_plan.md) |
-| Execution results & bug reports | [`docs/execution_results.md`](docs/execution_results.md) |
-| Automation framework + 2 tests | [`tests/`](tests/) and [`pages/`](pages/) |
-| Strategy & recommendations | [`docs/strategy_recommendations.md`](docs/strategy_recommendations.md) |
-
-## Known limitation — please read first
-
-The two automated tests were written against the documented API/UI contract in
-`Feature_Specification.pdf`, but **not yet executed against the live app**, because this
-environment has no network access to `qae-assignment-tau.vercel.app`. Specifically:
-
-- `tests/test_api_bet_validation.py` is implementation-ready — it only needs
-  `requests` and network access, no browser, no locator guesswork. Run it first.
-- `pages/betting_pages.py` uses `data-testid`-style locators as a best guess. **Before
-  running the E2E test**, inspect the real DOM and update the `Locators` class — see the comment
-  at the top of that file for exactly what to check.
-- `docs/execution_results.md` is a filled-in template: it documents one real finding from
-  reviewing the two spec documents (a stake-minimum inconsistency, BUG-01), plus the structure to
-  record the other findings once TC-01/02/03 are actually run.
+| Test plan | [docs/test_plan.md](docs/test_plan.md) |
+| Execution results and bug reports | [docs/execution_results.md](docs/execution_results.md) |
+| Automation tests | [tests/](tests/) |
+| Page objects | [pages/](pages/) |
+| API client | [api_client/](api_client/) |
+| Recommendations | [docs/strategy_recommendations.md](docs/strategy_recommendations.md) |
 
 ## Setup
 
-Requires Python 3.10+, Google Chrome, and a matching ChromeDriver on `PATH`
-(Selenium Manager, bundled with `selenium>=4.6`, will auto-resolve this for you in most cases).
+Requires Python 3.10+ and Google Chrome. Selenium Manager will resolve the browser driver automatically in most environments.
 
 ```bash
 python -m venv .venv
@@ -37,8 +41,7 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Defaults live in `config.py` and can be overridden via env vars — useful for CI or
-testing against a different environment without touching code:
+Defaults live in [config.py](config.py) and can be overridden with environment variables when needed:
 
 ```bash
 export QAE_BASE_URL="https://qae-assignment-tau.vercel.app"
@@ -49,33 +52,23 @@ export QAE_HEADLESS="true"       # set "false" to watch the browser locally
 ## Running the tests
 
 ```bash
-# Fast — API tests only, no browser (recommended first pass, see limitation above)
+# Fast API-only regression suite
 pytest -m "not e2e" -v
 
-# Everything, including the E2E browser test
+# Full suite, including the browser test
 pytest -v
 
-# Just the E2E test, with the browser visible
+# Browser-only E2E run
 QAE_HEADLESS=false pytest -m e2e -v
 ```
 
-## Design decisions worth calling out
+## Design notes
 
-- **Page Object Model** for the UI layer (`automation/pages/`) — keeps locators and interaction
-  logic out of test files, so a markup change is a one-file fix, not a find-and-replace across
-  every test.
-- **Explicit waits only, no implicit wait** (`config.IMPLICIT_WAIT_SECONDS = 0`) — mixing implicit
-  and explicit Selenium waits causes timeouts to silently compound; see comment in
-  `automation/pages/base_page.py`.
-- **`reset_balance` fixture runs before *and* after each test** — guarantees a known starting
-  balance and prevents a failed test from leaving stale state that poisons the next one.
-- **No test framework abstraction beyond what's needed.** No custom assertion library, no BDD
-  layer (Gherkin/behave) — plain pytest + Page Objects is the right amount of structure for a
-  2-test suite; adding more would be premature abstraction for a project this size (see
-  Recommendation #1 in the strategy doc for what I'd add if it scaled).
+- The UI layer uses a Page Object Model so locator updates stay localized to [pages/](pages/)
+- The API suite is the fast feedback layer for boundary and validation defects
+- The E2E test is intentionally limited to the single highest-value journey because it is slower and more fragile than API checks
+- The balance-reset fixture is used to ensure each test starts from a known state
 
 ## Tooling choices
 
-Only the required stack (Python 3, Selenium + pytest, `requests`) — no Poetry, Allure, or other
-add-ons, to keep the setup path (`pip install -r requirements.txt`) as short as possible for
-review.
+The stack stays intentionally small: Python, pytest, Selenium, and requests. This keeps the setup simple while still covering both API and UI behavior.
