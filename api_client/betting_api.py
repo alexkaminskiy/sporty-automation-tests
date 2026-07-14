@@ -61,3 +61,4 @@ class BettingAPIClient:
         client = BettingAPIClient(base_url=self.base_url)
         client._session.headers.pop("x-user-id", None)
         return client
+    

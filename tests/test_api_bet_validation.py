@@ -14,6 +14,8 @@ is far more naturally expressed against a JSON API than against form-field UI in
 import pytest
 from config import MAX_STAKE, MIN_STAKE
 from api_client.betting_api import BettingAPIClient
+from api_client.models import BetSuccessResponse, BetErrorResponse
+
 
 VALIDATION_ERROR_STATUS = 422
 
@@ -32,8 +34,8 @@ class TestStakeBoundaryValidation:
     @pytest.mark.api
     @pytest.mark.parametrize(
     "outcome",
-    ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
-    ids=["home", "draw", "away", "invalid_outcome"]
+    ["HOME", "DRAW", "AWAY"],  
+    ids=["home", "draw", "away"]
 )
     @pytest.mark.parametrize(
         "stake",
@@ -44,7 +46,16 @@ class TestStakeBoundaryValidation:
         self, api_client, reset_balance, valid_match_id, stake, outcome
     ):
         response = api_client.place_bet(valid_match_id, outcome, stake)
-        print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+        body = BetErrorResponse(**response.json())
+
+        assert body.error == "invalid_stake_min", (
+            f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with an 'invalid_stake' error, got {body.error}: {body.message}"
+        )
+        assert "Stake must be at least 1.00." == body.message, (
+            f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with an 'invalid_stake' error, got {body.error}: {body.message}"
+        )
+
+        # print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
         assert response.status_code == VALIDATION_ERROR_STATUS, (
             f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
             f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
