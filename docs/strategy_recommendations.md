@@ -58,6 +58,30 @@ rule exhaustively — the combination the task description asks for ("critical u
    enforced should be confirmed with the spec owner and the losing document corrected — otherwise
    whoever writes the next test picks whichever number they see first and the suite ends up
    internally inconsistent.
+4. **Add parallel execution.** The API suite is the obvious first candidate — no browser,
+   no shared state, sub-second per case — so `pytest-xdist` (`pytest -n auto -m api`) is close to
+   a free win once tests are confirmed independent (no shared fixtures mutating global state, no
+   test-order dependencies). E2E parallelization is a bigger lift: each worker needs its own
+   browser context and, more importantly, its own test data — two workers racing to place a bet
+   against the same `valid_match_id` will produce flaky balance assertions. That means parallel
+   E2E either needs per-worker match/account fixtures or a test-only endpoint to mint isolated
+   data (ties into the fixture-strategy note below). Sequencing matters here: parallelize API
+   first since it's low-risk and immediately shortens the PR-gate feedback loop from (1); treat
+   E2E parallelization as a follow-up once the fixture strategy exists, not a day-one change.
+
+5. **Add reporting.** Two distinct needs, don't conflate them:
+   - **CI-facing (fast signal):** JUnit XML output (`--junitxml=report.xml`) so the CI platform
+     renders pass/fail per test natively — this is what should drive the merge gate from (1), not
+     a parsed stdout log.
+   - **Human-facing (debugging failures):** `pytest-html` or Allure for the E2E suite specifically,
+     with screenshot-on-failure wired into a Playwright/Selenium fixture teardown. This is the
+     one that actually pays for itself — an E2E test failing on a locator timeout is close to
+     undebuggable from a log line alone; a screenshot + DOM snapshot at failure time turns a
+     "rerun and hope" investigation into a two-minute fix. Allure additionally gives history/trend
+     view across runs, which matters more once (4) is parallelizing and failures need to be
+     distinguished from genuine regressions vs. shared-state flakiness.
+   - Skip building a custom reporting layer — this is a solved problem and a bespoke dashboard is
+     exactly the kind of abstraction the 2-test/current scope doesn't justify yet.
 
 Runner-up: a lightweight **test data / fixture strategy for match IDs** — tests currently fetch
 `GET /api/matches` and use whatever match happens to be first (`valid_match_id` fixture). That's

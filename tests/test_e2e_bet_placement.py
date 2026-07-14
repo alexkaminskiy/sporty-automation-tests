@@ -8,8 +8,6 @@ browser, real network round-trips) which is exactly why it's reserved for the on
 justifies that cost, rather than being used to also cover boundary/negative cases — those are
 covered far more cheaply at the API layer (see test_api_bet_validation.py).
 """
-from __future__ import annotations
-
 import pytest
 
 from config import BASE_URL, USER_ID

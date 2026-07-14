@@ -10,8 +10,6 @@ to run on every commit, (b) it tests the source of truth directly — the API is
 enforces money movement, the UI is just a client of it, and (c) parametrized boundary testing
 is far more naturally expressed against a JSON API than against form-field UI interactions.
 """
-from __future__ import annotations
-
 import pytest
 
 from config import MAX_STAKE, MIN_STAKE
@@ -28,6 +26,7 @@ def valid_match_id(api_client: BettingAPIClient) -> str:
 
 
 class TestStakeBoundaryValidation:
+    @pytest.mark.api
     @pytest.mark.parametrize(
         "stake",
         [0, -1, -0.01, MIN_STAKE - 0.01],
@@ -40,6 +39,7 @@ class TestStakeBoundaryValidation:
             f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
         )
 
+    @pytest.mark.api
     @pytest.mark.parametrize(
         "stake",
         [MAX_STAKE + 0.01, 150.00, 1000.00],
@@ -52,6 +52,7 @@ class TestStakeBoundaryValidation:
             f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
         )
 
+    @pytest.mark.api
     @pytest.mark.parametrize("stake", [MIN_STAKE, MAX_STAKE], ids=["min_boundary", "max_boundary"])
     def test_stake_at_valid_boundary_is_accepted(self, api_client, reset_balance, valid_match_id, stake):
         response = api_client.place_bet(valid_match_id, "HOME", stake)
@@ -60,6 +61,7 @@ class TestStakeBoundaryValidation:
             f"got {response.status_code}: {response.text}"
         )
 
+    @pytest.mark.api
     @pytest.mark.parametrize("stake", [10.999, 5.001, 33.333], ids=["3dp_a", "3dp_b", "3dp_c"])
     def test_stake_with_invalid_precision_is_rejected(self, api_client, reset_balance, valid_match_id, stake):
         response = api_client.place_bet(valid_match_id, "HOME", stake)
@@ -68,6 +70,7 @@ class TestStakeBoundaryValidation:
             f"got {response.status_code}: {response.text}"
         )
 
+    @pytest.mark.api
     def test_stake_exceeding_balance_is_rejected_and_balance_unchanged(
         self, api_client, reset_balance, valid_match_id
     ):
@@ -88,22 +91,27 @@ class TestStakeBoundaryValidation:
 
 
 class TestSelectionAndRequestValidation:
+
+    @pytest.mark.api
     def test_invalid_selection_value_is_rejected(self, api_client, reset_balance, valid_match_id):
         response = api_client.place_bet(valid_match_id, "HOME_WIN", 10.00)  # not HOME/DRAW/AWAY
         assert response.status_code == VALIDATION_ERROR_STATUS
 
+    @pytest.mark.api
     def test_unknown_match_id_is_rejected(self, api_client, reset_balance):
         response = api_client.place_bet("does-not-exist-999", "HOME", 10.00)
         assert response.status_code == VALIDATION_ERROR_STATUS
 
+    @pytest.mark.api
     def test_missing_stake_field_is_rejected(self, api_client, reset_balance, valid_match_id):
         response = api_client.place_bet_raw({"matchId": valid_match_id, "selection": "HOME"})
         assert response.status_code in (400, VALIDATION_ERROR_STATUS)
 
+    @pytest.mark.api
     def test_malformed_json_body_returns_400(self, api_client, reset_balance):
         response = api_client.place_bet_raw(["not", "an", "object"])
         assert response.status_code == 400
-
+    @pytest.mark.api
     def test_missing_user_id_header_returns_401(self, api_client, valid_match_id):
         unauthenticated_client = api_client.without_auth()
         response = unauthenticated_client.place_bet(valid_match_id, "HOME", 10.00)
@@ -111,6 +119,8 @@ class TestSelectionAndRequestValidation:
 
 
 class TestBalanceReset:
+
+    @pytest.mark.api
     def test_reset_balance_returns_to_starting_value_and_is_persisted(self, api_client):
         from config import STARTING_BALANCE
 

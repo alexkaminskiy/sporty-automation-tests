@@ -53,7 +53,7 @@ export QAE_HEADLESS="true"       # set "false" to watch the browser locally
 
 ```bash
 # Fast API-only regression suite
-pytest -m "not e2e" -v
+pytest -m api -v
 
 # Full suite, including the browser test
 pytest -v

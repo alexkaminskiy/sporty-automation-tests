@@ -5,8 +5,6 @@ take-home assignment, not a production SDK. Each method returns the raw `request
 so tests can assert on status code, headers, and body independently rather than the client
 making assumptions about what a test cares about.
 """
-from __future__ import annotations
-
 import requests
 
 from config import API_BASE_URL, USER_ID

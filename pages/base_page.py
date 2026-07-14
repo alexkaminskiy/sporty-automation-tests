@@ -5,8 +5,6 @@ because Selenium applies implicit waits to every findElement call including ones
 explicit WebDriverWait poll loop, which silently multiplies timeouts and makes failures slow
 and hard to diagnose.
 """
-from __future__ import annotations
-
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait

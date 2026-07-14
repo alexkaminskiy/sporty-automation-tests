@@ -5,8 +5,6 @@ stable card classes and visible labels rather than the earlier `data-testid` con
 They are intentionally written to target the actual elements rendered by the app and to avoid
 hard-coded values that would break as balances or match lists change.
 """
-from __future__ import annotations
-
 from selenium.webdriver.common.by import By
 
 from pages.base_page import BasePage

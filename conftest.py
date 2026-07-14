@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
