@@ -5,6 +5,7 @@ stable card classes and visible labels rather than the earlier `data-testid` con
 They are intentionally written to target the actual elements rendered by the app and to avoid
 hard-coded values that would break as balances or match lists change.
 """
+
 from selenium.webdriver.common.by import By
 
 from pages.base_page import BasePage
@@ -23,12 +24,21 @@ class Locators:
     POTENTIAL_PAYOUT = (By.ID, "bet-slip-potential-payout")
     BALANCE_DISPLAY = (By.XPATH, "//span[contains(normalize-space(.), 'Balance:')]")
     PLACE_BET_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Place Bet')]")
-    REMOVE_SELECTION_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'close')]")
-    REMOVE_ALL_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Remove All')]")
+    REMOVE_SELECTION_BUTTON = (
+        By.XPATH,
+        "//button[contains(normalize-space(.), 'close')]",
+    )
+    REMOVE_ALL_BUTTON = (
+        By.XPATH,
+        "//button[contains(normalize-space(.), 'Remove All')]",
+    )
     VALIDATION_MESSAGE = (By.XPATH, "//*[contains(@class, 'error') or @role='alert']")
 
     # Success receipt modal
-    RECEIPT_MODAL = (By.XPATH, "//h2[normalize-space(text())='Bet Placed Successfully!']")
+    RECEIPT_MODAL = (
+        By.XPATH,
+        "//h2[normalize-space(text())='Bet Placed Successfully!']",
+    )
     RECEIPT_BET_ID = (By.XPATH, "//*[contains(normalize-space(.), 'Bet ID')]")
     RECEIPT_STAKE = (By.ID, "modal-success-stake")
     RECEIPT_PAYOUT = (By.ID, "modal-success-payout")
@@ -38,6 +48,7 @@ class Locators:
     ERROR_MODAL = (By.XPATH, "//*[contains(@class, 'error') or @role='alert']")
     ERROR_REBET_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Rebet')]")
     ERROR_CLOSE_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Close')]")
+
 
 class MatchListPage(BasePage):
     def load(self, base_url: str, user_id: str) -> "MatchListPage":

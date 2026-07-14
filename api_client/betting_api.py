@@ -5,6 +5,7 @@ take-home assignment, not a production SDK. Each method returns the raw `request
 so tests can assert on status code, headers, and body independently rather than the client
 making assumptions about what a test cares about.
 """
+
 import requests
 
 from config import API_BASE_URL, USER_ID
@@ -29,15 +30,21 @@ class BettingAPIClient:
         (e.g. strings, None) to exercise validation, so a strict type hint would fight
         the tests rather than help them."""
         payload = {"matchId": match_id, "selection": selection, "stake": stake}
-        return self._session.post(f"{self.base_url}/place-bet", json=payload, timeout=DEFAULT_TIMEOUT)
+        return self._session.post(
+            f"{self.base_url}/place-bet", json=payload, timeout=DEFAULT_TIMEOUT
+        )
 
     def place_bet_raw(self, json_body) -> requests.Response:
         """For malformed-payload tests (non-object JSON, missing fields, wrong types)
         where callers need full control over the body shape."""
-        return self._session.post(f"{self.base_url}/place-bet", json=json_body, timeout=DEFAULT_TIMEOUT)
+        return self._session.post(
+            f"{self.base_url}/place-bet", json=json_body, timeout=DEFAULT_TIMEOUT
+        )
 
     def reset_balance(self) -> requests.Response:
-        return self._session.post(f"{self.base_url}/reset-balance", timeout=DEFAULT_TIMEOUT)
+        return self._session.post(
+            f"{self.base_url}/reset-balance", timeout=DEFAULT_TIMEOUT
+        )
 
     def without_auth(self) -> "BettingAPIClient":
         """Returns a client with no x-user-id header, for 401 test cases."""

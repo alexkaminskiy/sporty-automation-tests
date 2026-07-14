@@ -3,6 +3,7 @@
 All environment-specific values live here so tests never hardcode URLs or
 credentials. Override via environment variables for CI.
 """
+
 import os
 
 BASE_URL = os.getenv("QAE_BASE_URL", "https://qae-assignment-tau.vercel.app")
@@ -22,7 +23,9 @@ STARTING_BALANCE = 125.50
 CURRENCY = "EUR"
 
 # Selenium
-IMPLICIT_WAIT_SECONDS = 0  # we use explicit waits only — implicit wait mixed with explicit
-                            # waits causes inconsistent timeouts, so keep this at 0
+IMPLICIT_WAIT_SECONDS = (
+    0  # we use explicit waits only — implicit wait mixed with explicit
+)
+# waits causes inconsistent timeouts, so keep this at 0
 EXPLICIT_WAIT_SECONDS = 10
 HEADLESS = os.getenv("QAE_HEADLESS", "false").lower() == "true"

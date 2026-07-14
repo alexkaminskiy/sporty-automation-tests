@@ -8,6 +8,7 @@ browser, real network round-trips) which is exactly why it's reserved for the on
 justifies that cost, rather than being used to also cover boundary/negative cases — those are
 covered far more cheaply at the API layer (see test_api_bet_validation.py).
 """
+
 import pytest
 
 from config import BASE_URL, USER_ID
@@ -33,9 +34,9 @@ def test_place_valid_bet_end_to_end(driver, reset_balance):
     receipt.wait_for_receipt()
 
     # Receipt values must match what was shown in the slip before submission (spec §2.4).
-    assert receipt.get_stake() == pytest.approx(stake, abs=0.01), (
-        f"Receipt stake {receipt.get_stake()} does not match entered stake {stake}"
-    )
+    assert receipt.get_stake() == pytest.approx(
+        stake, abs=0.01
+    ), f"Receipt stake {receipt.get_stake()} does not match entered stake {stake}"
     assert receipt.get_payout() == pytest.approx(expected_payout, abs=0.01), (
         f"Receipt payout {receipt.get_payout()} does not match pre-placement "
         f"quoted payout {expected_payout}"
