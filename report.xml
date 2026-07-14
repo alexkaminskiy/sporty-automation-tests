@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="16" time="13.767" timestamp="2026-07-14T16:40:57.445810+03:00" hostname="DESKTOP-7HGVNBQ"><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[zero-home]" time="0.954" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[zero-draw]" time="0.657" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[zero-away]" time="0.645" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[zero-invalid_outcome]" time="0.725" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_whole-home]" time="1.125"><failure message="AssertionError: stake=-1, outcome=HOME is below the minimum (1.0) and must be rejected with 422, got 200: {&quot;message&quot;:&quot;Bet placed successfully&quot;,&quot;matchId&quot;:&quot;premier-league-manutd-chelsea&quot;,&quot;selection&quot;:&quot;HOME&quot;,&quot;stake&quot;:-1,&quot;odds&quot;:2.45,&quot;payout&quot;:-2.46,&quot;balance&quot;:121,&quot;currency&quot;:&quot;USD&quot;}&#10;assert 200 == 422&#10; +  where 200 = &lt;Response [200]&gt;.status_code">self = &lt;tests.test_api_bet_validation.TestStakeBoundaryValidation object at 0x000001FB94D20BC0&gt;, api_client = &lt;api_client.betting_api.BettingAPIClient object at 0x000001FB94A99AC0&gt;, valid_match_id = 'premier-league-manutd-chelsea'
+stake = -1, outcome = 'HOME'
+
+        @pytest.mark.api
+        @pytest.mark.parametrize(
+        "outcome",
+        ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+        ids=["home", "draw", "away", "invalid_outcome"]
+    )
+        @pytest.mark.parametrize(
+            "stake",
+            [0, -1, -0.01, MIN_STAKE - 0.01],
+            ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
+        )
+        def test_stake_below_minimum_is_rejected(
+            self, api_client, valid_match_id, stake, outcome
+        ):
+            response = api_client.place_bet(valid_match_id, outcome, stake)
+            print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+&gt;           assert response.status_code == VALIDATION_ERROR_STATUS, (
+                f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
+                f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
+            )
+E           AssertionError: stake=-1, outcome=HOME is below the minimum (1.0) and must be rejected with 422, got 200: {"message":"Bet placed successfully","matchId":"premier-league-manutd-chelsea","selection":"HOME","stake":-1,"odds":2.45,"payout":-2.46,"balance":121,"currency":"USD"}
+E           assert 200 == 422
+E            +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_api_bet_validation.py:48: AssertionError</failure></testcase><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_whole-draw]" time="1.073"><failure message="AssertionError: stake=-1, outcome=DRAW is below the minimum (1.0) and must be rejected with 422, got 200: {&quot;message&quot;:&quot;Bet placed successfully&quot;,&quot;matchId&quot;:&quot;premier-league-manutd-chelsea&quot;,&quot;selection&quot;:&quot;DRAW&quot;,&quot;stake&quot;:-1,&quot;odds&quot;:3.1,&quot;payout&quot;:-3.1,&quot;balance&quot;:122,&quot;currency&quot;:&quot;USD&quot;}&#10;assert 200 == 422&#10; +  where 200 = &lt;Response [200]&gt;.status_code">self = &lt;tests.test_api_bet_validation.TestStakeBoundaryValidation object at 0x000001FB94D217F0&gt;, api_client = &lt;api_client.betting_api.BettingAPIClient object at 0x000001FB94D200B0&gt;, valid_match_id = 'premier-league-manutd-chelsea'
+stake = -1, outcome = 'DRAW'
+
+        @pytest.mark.api
+        @pytest.mark.parametrize(
+        "outcome",
+        ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+        ids=["home", "draw", "away", "invalid_outcome"]
+    )
+        @pytest.mark.parametrize(
+            "stake",
+            [0, -1, -0.01, MIN_STAKE - 0.01],
+            ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
+        )
+        def test_stake_below_minimum_is_rejected(
+            self, api_client, valid_match_id, stake, outcome
+        ):
+            response = api_client.place_bet(valid_match_id, outcome, stake)
+            print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+&gt;           assert response.status_code == VALIDATION_ERROR_STATUS, (
+                f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
+                f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
+            )
+E           AssertionError: stake=-1, outcome=DRAW is below the minimum (1.0) and must be rejected with 422, got 200: {"message":"Bet placed successfully","matchId":"premier-league-manutd-chelsea","selection":"DRAW","stake":-1,"odds":3.1,"payout":-3.1,"balance":122,"currency":"USD"}
+E           assert 200 == 422
+E            +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_api_bet_validation.py:48: AssertionError</failure></testcase><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_whole-away]" time="1.018"><failure message="AssertionError: stake=-1, outcome=AWAY is below the minimum (1.0) and must be rejected with 422, got 200: {&quot;message&quot;:&quot;Bet placed successfully&quot;,&quot;matchId&quot;:&quot;premier-league-manutd-chelsea&quot;,&quot;selection&quot;:&quot;AWAY&quot;,&quot;stake&quot;:-1,&quot;odds&quot;:2.8,&quot;payout&quot;:-2.8,&quot;balance&quot;:123,&quot;currency&quot;:&quot;USD&quot;}&#10;assert 200 == 422&#10; +  where 200 = &lt;Response [200]&gt;.status_code">self = &lt;tests.test_api_bet_validation.TestStakeBoundaryValidation object at 0x000001FB94D21880&gt;, api_client = &lt;api_client.betting_api.BettingAPIClient object at 0x000001FB94D598B0&gt;, valid_match_id = 'premier-league-manutd-chelsea'
+stake = -1, outcome = 'AWAY'
+
+        @pytest.mark.api
+        @pytest.mark.parametrize(
+        "outcome",
+        ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+        ids=["home", "draw", "away", "invalid_outcome"]
+    )
+        @pytest.mark.parametrize(
+            "stake",
+            [0, -1, -0.01, MIN_STAKE - 0.01],
+            ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
+        )
+        def test_stake_below_minimum_is_rejected(
+            self, api_client, valid_match_id, stake, outcome
+        ):
+            response = api_client.place_bet(valid_match_id, outcome, stake)
+            print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+&gt;           assert response.status_code == VALIDATION_ERROR_STATUS, (
+                f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
+                f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
+            )
+E           AssertionError: stake=-1, outcome=AWAY is below the minimum (1.0) and must be rejected with 422, got 200: {"message":"Bet placed successfully","matchId":"premier-league-manutd-chelsea","selection":"AWAY","stake":-1,"odds":2.8,"payout":-2.8,"balance":123,"currency":"USD"}
+E           assert 200 == 422
+E            +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_api_bet_validation.py:48: AssertionError</failure></testcase><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_whole-invalid_outcome]" time="0.714" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_fraction-home]" time="0.976"><failure message="AssertionError: stake=-0.01, outcome=HOME is below the minimum (1.0) and must be rejected with 422, got 200: {&quot;message&quot;:&quot;Bet placed successfully&quot;,&quot;matchId&quot;:&quot;premier-league-manutd-chelsea&quot;,&quot;selection&quot;:&quot;HOME&quot;,&quot;stake&quot;:-0.01,&quot;odds&quot;:2.45,&quot;payout&quot;:-0.03,&quot;balance&quot;:123.01,&quot;currency&quot;:&quot;USD&quot;}&#10;assert 200 == 422&#10; +  where 200 = &lt;Response [200]&gt;.status_code">self = &lt;tests.test_api_bet_validation.TestStakeBoundaryValidation object at 0x000001FB94D219D0&gt;, api_client = &lt;api_client.betting_api.BettingAPIClient object at 0x000001FB94D5A630&gt;, valid_match_id = 'premier-league-manutd-chelsea'
+stake = -0.01, outcome = 'HOME'
+
+        @pytest.mark.api
+        @pytest.mark.parametrize(
+        "outcome",
+        ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+        ids=["home", "draw", "away", "invalid_outcome"]
+    )
+        @pytest.mark.parametrize(
+            "stake",
+            [0, -1, -0.01, MIN_STAKE - 0.01],
+            ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
+        )
+        def test_stake_below_minimum_is_rejected(
+            self, api_client, valid_match_id, stake, outcome
+        ):
+            response = api_client.place_bet(valid_match_id, outcome, stake)
+            print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+&gt;           assert response.status_code == VALIDATION_ERROR_STATUS, (
+                f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
+                f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
+            )
+E           AssertionError: stake=-0.01, outcome=HOME is below the minimum (1.0) and must be rejected with 422, got 200: {"message":"Bet placed successfully","matchId":"premier-league-manutd-chelsea","selection":"HOME","stake":-0.01,"odds":2.45,"payout":-0.03,"balance":123.01,"currency":"USD"}
+E           assert 200 == 422
+E            +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_api_bet_validation.py:48: AssertionError</failure></testcase><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_fraction-draw]" time="0.964"><failure message="AssertionError: stake=-0.01, outcome=DRAW is below the minimum (1.0) and must be rejected with 422, got 200: {&quot;message&quot;:&quot;Bet placed successfully&quot;,&quot;matchId&quot;:&quot;premier-league-manutd-chelsea&quot;,&quot;selection&quot;:&quot;DRAW&quot;,&quot;stake&quot;:-0.01,&quot;odds&quot;:3.1,&quot;payout&quot;:-0.04,&quot;balance&quot;:123.02,&quot;currency&quot;:&quot;USD&quot;}&#10;assert 200 == 422&#10; +  where 200 = &lt;Response [200]&gt;.status_code">self = &lt;tests.test_api_bet_validation.TestStakeBoundaryValidation object at 0x000001FB94D21A60&gt;, api_client = &lt;api_client.betting_api.BettingAPIClient object at 0x000001FB94D5B140&gt;, valid_match_id = 'premier-league-manutd-chelsea'
+stake = -0.01, outcome = 'DRAW'
+
+        @pytest.mark.api
+        @pytest.mark.parametrize(
+        "outcome",
+        ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+        ids=["home", "draw", "away", "invalid_outcome"]
+    )
+        @pytest.mark.parametrize(
+            "stake",
+            [0, -1, -0.01, MIN_STAKE - 0.01],
+            ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
+        )
+        def test_stake_below_minimum_is_rejected(
+            self, api_client, valid_match_id, stake, outcome
+        ):
+            response = api_client.place_bet(valid_match_id, outcome, stake)
+            print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+&gt;           assert response.status_code == VALIDATION_ERROR_STATUS, (
+                f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
+                f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
+            )
+E           AssertionError: stake=-0.01, outcome=DRAW is below the minimum (1.0) and must be rejected with 422, got 200: {"message":"Bet placed successfully","matchId":"premier-league-manutd-chelsea","selection":"DRAW","stake":-0.01,"odds":3.1,"payout":-0.04,"balance":123.02,"currency":"USD"}
+E           assert 200 == 422
+E            +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_api_bet_validation.py:48: AssertionError</failure></testcase><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_fraction-away]" time="0.970"><failure message="AssertionError: stake=-0.01, outcome=AWAY is below the minimum (1.0) and must be rejected with 422, got 200: {&quot;message&quot;:&quot;Bet placed successfully&quot;,&quot;matchId&quot;:&quot;premier-league-manutd-chelsea&quot;,&quot;selection&quot;:&quot;AWAY&quot;,&quot;stake&quot;:-0.01,&quot;odds&quot;:2.8,&quot;payout&quot;:-0.03,&quot;balance&quot;:123.03,&quot;currency&quot;:&quot;USD&quot;}&#10;assert 200 == 422&#10; +  where 200 = &lt;Response [200]&gt;.status_code">self = &lt;tests.test_api_bet_validation.TestStakeBoundaryValidation object at 0x000001FB94D21AF0&gt;, api_client = &lt;api_client.betting_api.BettingAPIClient object at 0x000001FB94DD98B0&gt;, valid_match_id = 'premier-league-manutd-chelsea'
+stake = -0.01, outcome = 'AWAY'
+
+        @pytest.mark.api
+        @pytest.mark.parametrize(
+        "outcome",
+        ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+        ids=["home", "draw", "away", "invalid_outcome"]
+    )
+        @pytest.mark.parametrize(
+            "stake",
+            [0, -1, -0.01, MIN_STAKE - 0.01],
+            ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
+        )
+        def test_stake_below_minimum_is_rejected(
+            self, api_client, valid_match_id, stake, outcome
+        ):
+            response = api_client.place_bet(valid_match_id, outcome, stake)
+            print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
+&gt;           assert response.status_code == VALIDATION_ERROR_STATUS, (
+                f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
+                f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
+            )
+E           AssertionError: stake=-0.01, outcome=AWAY is below the minimum (1.0) and must be rejected with 422, got 200: {"message":"Bet placed successfully","matchId":"premier-league-manutd-chelsea","selection":"AWAY","stake":-0.01,"odds":2.8,"payout":-0.03,"balance":123.03,"currency":"USD"}
+E           assert 200 == 422
+E            +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_api_bet_validation.py:48: AssertionError</failure></testcase><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[negative_fraction-invalid_outcome]" time="0.765" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[just_below_min-home]" time="0.637" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[just_below_min-draw]" time="0.794" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[just_below_min-away]" time="0.818" /><testcase classname="tests.test_api_bet_validation.TestStakeBoundaryValidation" name="test_stake_below_minimum_is_rejected[just_below_min-invalid_outcome]" time="0.817" /></testsuite></testsuites>

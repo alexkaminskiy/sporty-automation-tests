@@ -9,8 +9,10 @@ making assumptions about what a test cares about.
 from typing import Any
 
 import requests
-
+import logging
 from config import API_BASE_URL, USER_ID
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10  # seconds
 
@@ -36,8 +38,15 @@ class BettingAPIClient:
         """`stake` is intentionally typed as Any — tests need to send malformed types
         (e.g. strings, None) to exercise validation, so a strict type hint would fight
         the tests rather than help them."""
+
         payload = {"matchId": match_id, "selection": selection, "stake": stake}
-        return self._request("POST", "/place-bet", json=payload)
+
+        response = self._request("POST", "/place-bet", json=payload)
+        # logger.debug(
+        #     f"Placed bet: {payload}, response status {response.status_code}, "
+        #     f"was {response.text}"
+        # )
+        return response
 
     def place_bet_raw(self, json_body: Any) -> requests.Response:
         """For malformed-payload tests (non-object JSON, missing fields, wrong types)

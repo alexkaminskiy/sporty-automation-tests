@@ -31,18 +31,25 @@ class TestStakeBoundaryValidation:
 
     @pytest.mark.api
     @pytest.mark.parametrize(
+    "outcome",
+    ["HOME", "DRAW", "AWAY", "NOT_A_REAL_OUTCOME"],  # last one is a negative test case
+    ids=["home", "draw", "away", "invalid_outcome"]
+)
+    @pytest.mark.parametrize(
         "stake",
         [0, -1, -0.01, MIN_STAKE - 0.01],
         ids=["zero", "negative_whole", "negative_fraction", "just_below_min"],
     )
     def test_stake_below_minimum_is_rejected(
-        self, api_client, reset_balance, valid_match_id, stake
+        self, api_client, reset_balance, valid_match_id, stake, outcome
     ):
-        response = api_client.place_bet(valid_match_id, "HOME", stake)
+        response = api_client.place_bet(valid_match_id, outcome, stake)
+        print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
         assert response.status_code == VALIDATION_ERROR_STATUS, (
-            f"stake={stake} is below the minimum ({MIN_STAKE}) and must be rejected with "
+            f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
             f"{VALIDATION_ERROR_STATUS}, got {response.status_code}: {response.text}"
         )
+
 
     @pytest.mark.api
     @pytest.mark.parametrize(
@@ -91,11 +98,6 @@ class TestStakeBoundaryValidation:
     ):
         balance_before = api_client.get_balance().json()["balance"]
         over_balance_stake = min(balance_before + 10.00, MAX_STAKE)
-        if over_balance_stake <= balance_before:
-            pytest.skip(
-                "Starting balance already exceeds MAX_STAKE — cannot construct an "
-                "over-balance stake within the stake cap"
-            )
 
         response = api_client.place_bet(
             valid_match_id, "HOME", round(over_balance_stake, 2)
