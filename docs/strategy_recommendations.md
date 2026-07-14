@@ -83,6 +83,26 @@ rule exhaustively — the combination the task description asks for ("critical u
    - Skip building a custom reporting layer — this is a solved problem and a bespoke dashboard is
      exactly the kind of abstraction the 2-test/current scope doesn't justify yet.
 
+6. **Add logging.** Test *output* (pass/fail, from item 5) tells you *what* broke; logging tells
+   you *why* — the two aren't substitutes. Minimum viable setup:
+   - **API layer:** log request/response pairs (method, URL, status, latency, and body for
+     non-2xx responses) at `DEBUG`, gated behind a `--log-cli-level` flag rather than always-on,
+     so a green CI run stays quiet and a failing one can be rerun locally with full request/
+     response visibility. This is what actually lets you tell "the API returned 400 as expected"
+     apart from "the API returned 500 and the assertion happened to also fail" — a distinction
+     the JUnit XML from (5) doesn't carry today.
+   - **E2E layer:** browser console logs and network-tab equivalents (`page.on("console")`,
+     `page.on("response")` in Playwright, or Selenium's performance log) captured alongside the
+     screenshot-on-failure from (5), not as a separate mechanism — a screenshot shows *that* the
+     receipt didn't render, a console log showing a JS exception or a failed XHR shows *why*.
+   - **Don't** route this through `print()` — use the standard `logging` module with a per-test
+     handler (or `caplog` in pytest) so log volume scales with `-n auto` from (4) without
+     interleaving into unreadable noise across parallel workers.
+   - Skip structured/JSON logging or a log aggregation pipeline (ELK, Datadog) at this scale —
+     that's justified once there's a deployed environment with its own logs to correlate against,
+     not for a 2-test suite. Revisit alongside the contract/schema layer in (2) if this scales
+     far enough that cross-service log correlation becomes the bottleneck, not before.
+     
 Runner-up: a lightweight **test data / fixture strategy for match IDs** — tests currently fetch
 `GET /api/matches` and use whatever match happens to be first (`valid_match_id` fixture). That's
 fine for a small fixed catalog, but if match data becomes dynamic (rotating fixtures, real kickoff
