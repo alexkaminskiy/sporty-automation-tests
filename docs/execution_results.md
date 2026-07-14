@@ -95,17 +95,7 @@ same bug template.
 - **Business impact:** A reset action that fails to return the system to a known-good state can leave the application and any subsequent tests in inconsistent financial conditions.
 - **Evidence:** The failing pytest case `tests/test_api_bet_validation.py::TestBalanceReset::test_reset_balance_returns_to_starting_value_and_is_persisted` reported `assert 120 == 125.5 ± 0.01`.
 
-### BUG-05 — E2E bet placement flow fails to complete against the live UI
-- **Severity:** High
-- **Reproduction steps:**
-  1. Open the live app in a browser.
-  2. Select a match and attempt to place a bet.
-  3. Observe the failure in the browser flow.
-- **Expected vs actual:** Expected the full bet-placement journey to complete end-to-end: select odds, enter stake, place bet, show receipt, and update balance. Actual: the current E2E test fails during the flow, indicating the UI interaction or state transition is not fully working.
-- **Business impact:** This blocks the core user journey and means a customer cannot reliably complete a bet placement from the UI.
-- **Evidence:** The pytest run for `tests/test_e2e_bet_placement.py::test_place_valid_bet_end_to_end` failed during the browser-driven flow.
-
-### BUG-06 — Balance is not updated immediately after a bet and requires a refresh
+### BUG-05 — Balance is not updated immediately after a bet and requires a refresh
 - **Severity:** Medium
 - **Reproduction steps:**
   1. Open the app and note the current balance.
@@ -115,22 +105,16 @@ same bug template.
 - **Business impact:** Users may believe the bet did not go through or may make additional bets based on stale balance information, creating confusion and potential support issues.
 - **Evidence:** Observed while exercising the live betting flow in the browser; the bet placement completed, but the displayed balance did not refresh until the page was reloaded.
 
-### BUG-07 — Potential payout does not match the expected value
-- **Severity:** Medium
-- **Reproduction steps:**
-  1. Open the app and select a match.
-  2. Enter a stake in the bet slip.
-  3. Compare the displayed potential payout with the expected payout based on the odds and stake.
-- **Expected vs actual:** Expected the potential payout to be calculated correctly as odds × stake. Actual: the displayed payout does not match the expected amount, indicating a calculation or display issue.
-- **Business impact:** Incorrect payout calculations can mislead users about potential returns and undermine trust in the betting experience.
-- **Evidence:** Observed during live UI validation while reviewing the bet slip values; the payout shown in the UI did not align with the expected mathematical result.
-
-### BUG-08 — Receipt payout differs from the pre-placement quoted payout
+### BUG-07 — Receipt payout differs from the pre-placement quoted payout
 - **Severity:** High
 - **Reproduction steps:**
-  1. Select a match and enter a valid stake in the bet slip.
+  1. Select a match Select the first match PAST
+    Premier League
+    Fri, Feb 27
+    Manchester Utd
+    Chelseaand attempt to place a bet 20, odds 2.45.
   2. Record the pre-placement quoted payout shown before submitting the bet.
   3. Submit the bet and compare the payout shown on the receipt to the pre-placement value.
-- **Expected vs actual:** Expected the receipt payout to match the pre-placement quoted payout exactly. Actual: the receipt showed `20.0` while the pre-placement quoted payout was `24.5`, so the payout changed after submission.
+- **Expected vs actual:** Expected the receipt payout to match the pre-placement quoted payout exactly. Actual: the receipt showed `20.0` while the pre-placement quoted payout was `24.5` in UI (API response shoes expected payout), so the payout changed after submission.
 - **Business impact:** A mismatch between the quoted and final payout can cause customers to believe the system is inconsistent or misleading, and it undermines trust in the bet confirmation flow.
 - **Evidence:** Captured from the pytest assertion: `E AssertionError: Receipt payout 20.0 does not match pre-placement quoted payout 24.5`.

@@ -14,9 +14,9 @@ from pages.base_page import BasePage
 class Locators:
     # Match list
     MATCH_CARD = (By.CSS_SELECTOR, "div.matchCard")
-    ODDS_HOME = (By.CSS_SELECTOR, "button:nth-of-type(1)")
-    ODDS_DRAW = (By.CSS_SELECTOR, "button:nth-of-type(2)")
-    ODDS_AWAY = (By.CSS_SELECTOR, "button:nth-of-type(3)")
+    ODDS_HOME = (By.ID, "odds-premier-league-manutd-chelsea-home")
+    ODDS_DRAW = (By.ID, "odds-premier-league-manutd-chelsea-draw")
+    ODDS_AWAY = (By.ID, "odds-premier-league-manutd-chelsea-away")
 
     # Bet slip
     BET_SLIP = (By.CSS_SELECTOR, "h3.betSlipTitle")

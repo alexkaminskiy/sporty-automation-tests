@@ -15,7 +15,7 @@ API_BASE_URL = f"{BASE_URL}/api"
 # docs/execution_results.md BUG-01. Set this to whatever the live implementation actually
 # enforces once TC-03 has been executed; tests reference this single source of truth so the
 # fix is a one-line change.
-MIN_STAKE = 1.01
+MIN_STAKE = 1.00
 MAX_STAKE = 100.00
 MIN_ODDS = 1.01
 MAX_ODDS = 1000.00
