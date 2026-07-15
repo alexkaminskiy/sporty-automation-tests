@@ -1,12 +1,15 @@
 """Page objects for the betting flow.
 
-The locators below were validated against the live app's current DOM structure, which uses
-stable card classes and visible labels rather than the earlier `data-testid` convention.
-They are intentionally written to target the actual elements rendered by the app and to avoid
-hard-coded values that would break as balances or match lists change.
+The page contains a dynamic list of match cards. Instead of relying on
+hardcoded IDs (e.g. Manchester Utd vs Chelsea), all interactions are scoped
+to the corresponding match card, making the implementation independent of
+the actual fixtures displayed.
 """
 
+import re
+
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
 from pages.base_page import BasePage
 
@@ -14,16 +17,23 @@ from pages.base_page import BasePage
 class Locators:
     # Match list
     MATCH_CARD = (By.CSS_SELECTOR, "div.matchCard")
-    ODDS_HOME = (By.ID, "odds-premier-league-manutd-chelsea-home")
-    ODDS_DRAW = (By.ID, "odds-premier-league-manutd-chelsea-draw")
-    ODDS_AWAY = (By.ID, "odds-premier-league-manutd-chelsea-away")
+
+    # Match card internals
+    TEAM_NAMES = (By.CSS_SELECTOR, ".teamName")
+    ODDS_BUTTONS = (By.CSS_SELECTOR, "button[id^='odds-']")
 
     # Bet slip
     BET_SLIP = (By.CSS_SELECTOR, "h3.betSlipTitle")
     STAKE_INPUT = (By.CSS_SELECTOR, "input.stakeInput")
     POTENTIAL_PAYOUT = (By.ID, "bet-slip-potential-payout")
-    BALANCE_DISPLAY = (By.XPATH, "//span[contains(normalize-space(.), 'Balance:')]")
-    PLACE_BET_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Place Bet')]")
+    BALANCE_DISPLAY = (
+        By.XPATH,
+        "//span[contains(normalize-space(.), 'Balance:')]",
+    )
+    PLACE_BET_BUTTON = (
+        By.XPATH,
+        "//button[contains(normalize-space(.), 'Place Bet')]",
+    )
     REMOVE_SELECTION_BUTTON = (
         By.XPATH,
         "//button[contains(normalize-space(.), 'close')]",
@@ -32,22 +42,81 @@ class Locators:
         By.XPATH,
         "//button[contains(normalize-space(.), 'Remove All')]",
     )
-    VALIDATION_MESSAGE = (By.XPATH, "//*[contains(@class, 'error') or @role='alert']")
+    VALIDATION_MESSAGE = (
+        By.XPATH,
+        "//*[contains(@class, 'error') or @role='alert']",
+    )
 
     # Success receipt modal
     RECEIPT_MODAL = (
         By.XPATH,
-        "//h2[normalize-space(text())='Bet Placed Successfully!']",
+        "//h2[normalize-space()='Bet Placed Successfully!']",
     )
-    RECEIPT_BET_ID = (By.XPATH, "//*[contains(normalize-space(.), 'Bet ID')]")
+    RECEIPT_BET_ID = (
+        By.XPATH,
+        "//*[contains(normalize-space(.), 'Bet ID')]",
+    )
     RECEIPT_STAKE = (By.ID, "modal-success-stake")
     RECEIPT_PAYOUT = (By.ID, "modal-success-payout")
-    RECEIPT_CLOSE_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Close')]")
+    RECEIPT_CLOSE_BUTTON = (
+        By.XPATH,
+        "//button[contains(normalize-space(.), 'Close')]",
+    )
 
     # Error modal
-    ERROR_MODAL = (By.XPATH, "//*[contains(@class, 'error') or @role='alert']")
-    ERROR_REBET_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Rebet')]")
-    ERROR_CLOSE_BUTTON = (By.XPATH, "//button[contains(normalize-space(.), 'Close')]")
+    ERROR_MODAL = (
+        By.XPATH,
+        "//*[contains(@class, 'error') or @role='alert']",
+    )
+    ERROR_REBET_BUTTON = (
+        By.XPATH,
+        "//button[contains(normalize-space(.), 'Rebet')]",
+    )
+    ERROR_CLOSE_BUTTON = (
+        By.XPATH,
+        "//button[contains(normalize-space(.), 'Close')]",
+    )
+
+
+class MatchCard:
+    """Represents a single match card."""
+
+    OUTCOME_INDEX = {
+        "HOME": 0,
+        "DRAW": 1,
+        "AWAY": 2,
+    }
+
+    def __init__(self, element: WebElement):
+        self.element = element
+
+    @property
+    def teams(self) -> tuple[str, str]:
+        teams = self.element.find_elements(*Locators.TEAM_NAMES)
+        return teams[0].text, teams[1].text
+
+    @property
+    def home_team(self) -> str:
+        return self.teams[0]
+
+    @property
+    def away_team(self) -> str:
+        return self.teams[1]
+
+    def select_outcome(self, outcome: str) -> None:
+        outcome = outcome.upper()
+
+        if outcome not in self.OUTCOME_INDEX:
+            raise ValueError(f"Unknown outcome: {outcome}")
+
+        buttons = self.element.find_elements(*Locators.ODDS_BUTTONS)
+
+        if len(buttons) < 3:
+            raise AssertionError(
+                f"Expected at least 3 odds buttons, found {len(buttons)}"
+            )
+
+        buttons[self.OUTCOME_INDEX[outcome]].click()
 
 
 class MatchListPage(BasePage):
@@ -56,19 +125,41 @@ class MatchListPage(BasePage):
         self.find(Locators.MATCH_CARD)
         return self
 
-    def select_first_match_home_win(self) -> None:
-        cards = self.find_all(Locators.MATCH_CARD)
-        assert cards, "No matches rendered — cannot proceed with bet placement flow"
-        cards[0].find_element(*Locators.ODDS_HOME).click()
+    @property
+    def matches(self) -> list[MatchCard]:
+        return [
+            MatchCard(card)
+            for card in self.find_all(Locators.MATCH_CARD)
+        ]
 
-    def select_match_outcome(self, match_index: int, outcome: str) -> None:
-        outcome_locator = {
-            "HOME": Locators.ODDS_HOME,
-            "DRAW": Locators.ODDS_DRAW,
-            "AWAY": Locators.ODDS_AWAY,
-        }[outcome]
-        cards = self.find_all(Locators.MATCH_CARD)
-        cards[match_index].find_element(*outcome_locator).click()
+    def select_first_match_home_win(self) -> None:
+        matches = self.matches
+        assert matches, "No matches rendered."
+
+        matches[0].select_outcome("HOME")
+
+    def select_match_outcome(
+        self,
+        match_index: int,
+        outcome: str,
+    ) -> None:
+        self.matches[match_index].select_outcome(outcome)
+
+    def find_match(
+        self,
+        home_team: str,
+        away_team: str,
+    ) -> MatchCard:
+        for match in self.matches:
+            if (
+                match.home_team == home_team
+                and match.away_team == away_team
+            ):
+                return match
+
+        raise AssertionError(
+            f"Match '{home_team}' vs '{away_team}' not found."
+        )
 
 
 class BetSlipPage(BasePage):
@@ -78,46 +169,68 @@ class BetSlipPage(BasePage):
         field.send_keys(amount)
 
     def get_balance(self) -> float:
-        text = self.text_of(Locators.BALANCE_DISPLAY)
-        return _parse_currency(text)
+        return _parse_currency(
+            self.text_of(Locators.BALANCE_DISPLAY)
+        )
 
     def get_potential_payout(self) -> float:
-        text = self.text_of(Locators.POTENTIAL_PAYOUT)
-        return _parse_currency(text)
+        return _parse_currency(
+            self.text_of(Locators.POTENTIAL_PAYOUT)
+        )
 
     def click_place_bet(self) -> None:
-        self.find_clickable(Locators.PLACE_BET_BUTTON).click()
+        self.find_clickable(
+            Locators.PLACE_BET_BUTTON
+        ).click()
 
     def is_place_bet_enabled(self) -> bool:
-        return self.find(Locators.PLACE_BET_BUTTON).is_enabled()
+        return self.find(
+            Locators.PLACE_BET_BUTTON
+        ).is_enabled()
 
     def get_validation_message(self) -> str:
-        return self.text_of(Locators.VALIDATION_MESSAGE)
+        return self.text_of(
+            Locators.VALIDATION_MESSAGE
+        )
 
 
 class ReceiptModal(BasePage):
     def wait_for_receipt(self) -> None:
-        self.wait_until_visible(Locators.RECEIPT_MODAL)
+        self.wait_until_visible(
+            Locators.RECEIPT_MODAL
+        )
 
     def get_stake(self) -> float:
-        return _parse_currency(self.text_of(Locators.RECEIPT_STAKE))
+        return _parse_currency(
+            self.text_of(Locators.RECEIPT_STAKE)
+        )
 
     def get_payout(self) -> float:
-        return _parse_currency(self.text_of(Locators.RECEIPT_PAYOUT))
+        return _parse_currency(
+            self.text_of(Locators.RECEIPT_PAYOUT)
+        )
 
     def get_bet_id(self) -> str:
-        return self.text_of(Locators.RECEIPT_BET_ID)
+        return self.text_of(
+            Locators.RECEIPT_BET_ID
+        )
 
     def close(self) -> None:
-        self.find_clickable(Locators.RECEIPT_CLOSE_BUTTON).click()
-        self.wait_until_gone(Locators.RECEIPT_MODAL)
+        self.find_clickable(
+            Locators.RECEIPT_CLOSE_BUTTON
+        ).click()
+        self.wait_until_gone(
+            Locators.RECEIPT_MODAL
+        )
 
 
 def _parse_currency(text: str) -> float:
-    """Parse currency values from the page text, extracting the first monetary amount."""
-    import re
-
+    """Extract the first currency value from text."""
     match = re.search(r"(\d+(?:\.\d{1,2})?)", text)
+
     if not match:
-        raise ValueError(f"Could not parse currency from text: {text}")
+        raise ValueError(
+            f"Could not parse currency from: {text}"
+        )
+
     return float(match.group(1))

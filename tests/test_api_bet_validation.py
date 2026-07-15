@@ -54,7 +54,7 @@ class TestStakeBoundaryValidation:
         assert "Stake must be at least 1.00." == body.message, (
             f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with an 'invalid_stake' error, got {body.error}: {body.message}"
         )
-
+        
         # print(f"DEBUG: stake={stake}, outcome={outcome}, response.status_code={response.status_code}, response.text={response.text}")
         assert response.status_code == VALIDATION_ERROR_STATUS, (
             f"stake={stake}, outcome={outcome} is below the minimum ({MIN_STAKE}) and must be rejected with "
