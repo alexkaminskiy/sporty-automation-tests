@@ -16,17 +16,31 @@ from pages.betting_pages import BetSlipPage, MatchListPage, ReceiptModal
 
 
 @pytest.mark.e2e
-def test_place_valid_bet_end_to_end(driver, reset_balance):
+@pytest.mark.parametrize(
+    "home_team,away_team,outcome",
+    [
+        ("Manchester Utd", "Chelsea", "HOME"),
+        ("Real Madrid", "Barcelona", "DRAW"),
+        ("Juventus", "AC Milan", "AWAY"),
+    ],
+)
+def test_place_valid_bet_end_to_end(driver,
+    reset_balance,
+    home_team,
+    away_team,
+    outcome):
     match_list = MatchListPage(driver)
     bet_slip = BetSlipPage(driver)
     receipt = ReceiptModal(driver)
 
     match_list.load(BASE_URL, USER_ID)
 
-    starting_balance = bet_slip.get_balance()
     stake = 10.00
+    starting_balance = bet_slip.get_balance()
 
-    match_list.select_first_match_home_win()
+    match = match_list.find_match(home_team, away_team)
+    match.select_outcome(outcome)
+
     bet_slip.enter_stake(str(stake))
     expected_payout = bet_slip.get_potential_payout()
 

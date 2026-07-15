@@ -81,42 +81,46 @@ class Locators:
 class MatchCard:
     """Represents a single match card."""
 
-    OUTCOME_INDEX = {
+    _OUTCOME_INDEX = {
         "HOME": 0,
         "DRAW": 1,
         "AWAY": 2,
     }
 
-    def __init__(self, element: WebElement):
+    def __init__(self, element):
         self.element = element
 
     @property
-    def teams(self) -> tuple[str, str]:
+    def teams(self):
         teams = self.element.find_elements(*Locators.TEAM_NAMES)
         return teams[0].text, teams[1].text
 
     @property
-    def home_team(self) -> str:
+    def home_team(self):
         return self.teams[0]
 
     @property
-    def away_team(self) -> str:
+    def away_team(self):
         return self.teams[1]
 
-    def select_outcome(self, outcome: str) -> None:
+    @property
+    def odds(self):
+        return self.element.find_elements(*Locators.ODDS_BUTTONS)
+
+    def select_outcome(self, outcome: str):
         outcome = outcome.upper()
 
-        if outcome not in self.OUTCOME_INDEX:
+        if outcome not in self._OUTCOME_INDEX:
             raise ValueError(f"Unknown outcome: {outcome}")
 
-        buttons = self.element.find_elements(*Locators.ODDS_BUTTONS)
+        buttons = self.odds
 
         if len(buttons) < 3:
             raise AssertionError(
-                f"Expected at least 3 odds buttons, found {len(buttons)}"
+                f"Expected 3 odds buttons, got {len(buttons)}"
             )
 
-        buttons[self.OUTCOME_INDEX[outcome]].click()
+        buttons[self._OUTCOME_INDEX[outcome]].click()
 
 
 class MatchListPage(BasePage):
@@ -126,30 +130,24 @@ class MatchListPage(BasePage):
         return self
 
     @property
-    def matches(self) -> list[MatchCard]:
+    def matches(self):
         return [
             MatchCard(card)
             for card in self.find_all(Locators.MATCH_CARD)
         ]
 
+    
     def select_first_match_home_win(self) -> None:
         matches = self.matches
         assert matches, "No matches rendered."
-
         matches[0].select_outcome("HOME")
 
-    def select_match_outcome(
-        self,
-        match_index: int,
-        outcome: str,
-    ) -> None:
+    
+    def select_match_outcome(self, match_index: int, outcome: str) -> None:
         self.matches[match_index].select_outcome(outcome)
 
-    def find_match(
-        self,
-        home_team: str,
-        away_team: str,
-    ) -> MatchCard:
+    # New helper
+    def find_match(self, home_team: str, away_team: str) -> MatchCard:
         for match in self.matches:
             if (
                 match.home_team == home_team
